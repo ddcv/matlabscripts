@@ -1,0 +1,416 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN">
+<html xmlns:mwsh="http://www.mathworks.com/namespace/mcode/v1/syntaxhighlight.dtd">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   
+      <!--
+This HTML is auto-generated from an M-file.
+To make changes, update the M-file and republish this document.
+      -->
+      <title>evodriver2</title>
+      <meta name="generator" content="MATLAB 7.6">
+      <meta name="date" content="2010-05-02">
+      <meta name="m-file" content="evodriver2"><style>
+
+body {
+  background-color: white;
+  margin:10px;
+}
+
+h1 {
+  color: #990000; 
+  font-size: x-large;
+}
+
+h2 {
+  color: #990000;
+  font-size: medium;
+}
+
+/* Make the text shrink to fit narrow windows, but not stretch too far in 
+wide windows. */ 
+p,h1,h2,div.content div {
+  max-width: 600px;
+  /* Hack for IE6 */
+  width: auto !important; width: 600px;
+}
+
+pre.codeinput {
+  background: #EEEEEE;
+  padding: 10px;
+}
+@media print {
+  pre.codeinput {word-wrap:break-word; width:100%;}
+} 
+
+span.keyword {color: #0000FF}
+span.comment {color: #228B22}
+span.string {color: #A020F0}
+span.untermstring {color: #B20000}
+span.syscmd {color: #B28C00}
+
+pre.codeoutput {
+  color: #666666;
+  padding: 10px;
+}
+
+pre.error {
+  color: red;
+}
+
+p.footer {
+  text-align: right;
+  font-size: xx-small;
+  font-weight: lighter;
+  font-style: italic;
+  color: gray;
+}
+
+  </style></head>
+   <body>
+      <div class="content">
+         <h2>Contents</h2>
+         <div>
+            <ul>
+               <li><a href="#2">evodriver2.m</a></li>
+               <li><a href="#4">evo.m</a></li>
+               <li><a href="#7">score.m</a></li>
+               <li><a href="#10">advance.m</a></li>
+               <li><a href="#13">evodisp.m</a></li>
+            </ul>
+         </div><pre class="codeinput"><span class="comment">%</span>
+<span class="comment">% Dan Calderon, CAAM 210, Spring 2010, HW 14</span>
+<span class="comment">%</span>
+</pre><h2>evodriver2.m<a name="2"></a></h2><pre class="codeinput"><span class="comment">%calls on evo,</span>
+
+<span class="comment">% sets sizes and b (and a plotflag)</span>
+<span class="comment">% in order to generate the necessary plots.</span>
+
+<span class="keyword">function</span> evodriver2
+</pre><pre class="codeinput">figure(1)
+
+evo(65,69,1.9,100)
+
+figure(2)
+
+evo(69,69,1.9,200)
+
+
+<span class="keyword">return</span>
+</pre><h2>evo.m<a name="4"></a></h2>
+         <p>evo delegates to three subfunctions score(A,b) which calculates the score for each entry in A advance(S,A) which uses the
+            score to determine the next generation evodisp(A,An) which compares the prev. generation to current to generate representative
+            colors for the state
+         </p><pre class="codeinput"><span class="keyword">function</span> evo(M,N,b,gen)
+</pre><pre class="codeinput">FC = zeros(1,gen);
+
+A = ones(M,N);	<span class="comment">% M-by-N starting template</span>
+A((M+1)/2,(N+1)/2) = 0;
+
+<span class="comment">%A = round(rand(M,N)/1.8);</span>
+
+<span class="keyword">for</span> itc = 1:gen,	<span class="comment">% play for gen generations</span>
+
+    clf
+
+    S = score(A,b);    <span class="comment">% living are red</span>
+
+    An = advance(S,A);
+
+    FC(itc) = sum(sum(A))/(M*N);
+
+    <span class="keyword">if</span> itc == gen
+
+
+        <span class="keyword">if</span> M == 199
+            evodisp(A,An);
+
+            title([<span class="string">'Generation '</span> num2str(itc)],<span class="string">'fontsize'</span>,16)
+            axis <span class="string">off</span>
+        <span class="keyword">else</span>
+
+            plot(1:itc,FC)
+
+            mstring = num2str(M);
+            nstring = num2str(N);
+            bstring = num2str(b);
+            tstring = [<span class="string">'M = '</span> mstring <span class="string">', N = '</span> nstring <span class="string">', b = '</span> bstring];
+            title(tstring,<span class="string">'fontsize'</span>,16)
+            xlabel(<span class="string">'Generation'</span>,<span class="string">'fontsize'</span>,16)
+            ylabel(<span class="string">'Fraction of Cooperators'</span>,<span class="string">'fontsize'</span>,16)
+            axis <span class="string">on</span>
+
+        <span class="keyword">end</span>
+
+    <span class="keyword">end</span>
+
+    A = An;
+
+
+
+<span class="keyword">end</span>
+
+
+<span class="keyword">return</span>
+</pre><h2>score.m<a name="7"></a></h2><pre class="codeinput"><span class="comment">% calculates the score for each entry in A</span>
+</pre><pre class="codeinput"><span class="keyword">function</span> S = score(A,b)
+</pre><pre class="codeinput">S = A;
+
+M = size(A,1);
+N = size(A,2);
+
+<span class="keyword">for</span> i=2:M-2,	<span class="comment">% dead border</span>
+<span class="keyword">for</span> j=2:N-2,
+
+    nC = sum(sum(A(i-1:i+1,j-1:j+1)));   <span class="comment">% # of C neighbors</span>
+
+    <span class="comment">% if C but</span>
+       <span class="keyword">if</span> A(i,j) == 1,			<span class="comment">% lonely or crowded die</span>
+          S(i,j) = nC;
+       <span class="keyword">else</span>
+           S(i,j) = nC*b;
+       <span class="keyword">end</span>
+
+<span class="keyword">end</span>
+<span class="keyword">end</span>
+
+
+
+<span class="keyword">return</span>
+</pre><pre class="codeoutput">WDEavRCxrZ00007006</pre><h2>advance.m<a name="10"></a></h2><pre class="codeinput"><span class="comment">%uses the score to determine the next generation</span>
+<span class="comment">%</span>
+<span class="comment">%step in time</span>
+</pre><pre class="codeinput"><span class="keyword">function</span> An = advance(S,A)
+</pre><pre class="codeinput">An = A;
+
+M = size(A,1);
+N = size(A,2);
+
+<span class="keyword">for</span> i=2: M-2,	<span class="comment">% dead border</span>
+<span class="keyword">for</span> j=2: N-2,
+
+    Amax = max(max(S(i-1:i+1,j-1:j+1))); <span class="comment">% # of living neighbors</span>
+
+    [indx, indy] = find(S == Amax);
+
+    <span class="keyword">if</span> S(i,j) &lt; Amax,				        <span class="comment">% if alive but</span>
+       			<span class="comment">% lonely or crowded die</span>
+          An(i,j) = A(indx(1),indy(1));
+    <span class="keyword">end</span>
+
+<span class="keyword">end</span>
+<span class="keyword">end</span>
+
+<span class="keyword">return</span>
+</pre><h2>evodisp.m<a name="13"></a></h2>
+         <p>paints a square blue when C remains C paints a square red when D remains D paints a square yellow when C becomes D paints
+            a square green when D becomes C
+         </p><pre class="codeinput"><span class="keyword">function</span> evodisp(A,An)
+
+map = [0 0 1; 1 0 0; 1 1 0; 0 1 0];
+
+colormap(map)
+
+display = An;
+
+display(display == A &amp; display ==1) = 1;
+
+display(display == A &amp; display ==0) = 2;
+
+display(display ~= A &amp; display ==0) = 3;
+
+display(display ~= A &amp; display ==1) = 4;
+
+set(gcf,<span class="string">'doublebuffer'</span>,<span class="string">'on'</span>);	<span class="comment">% kill flicker</span>
+
+axis <span class="string">off</span>
+
+image(display)
+
+
+<span class="keyword">return</span>
+</pre><img vspace="5" hspace="5" src="evodriver2_01.png"> <p class="footer"><br>
+            Published with MATLAB&reg; 7.6<br></p>
+      </div>
+      <!--
+##### SOURCE BEGIN #####
+%
+% Dan Calderon, CAAM 210, Spring 2010, HW 14 
+%
+%%  evodriver2.m
+
+%calls on evo, 
+
+% sets sizes and b (and a plotflag)
+% in order to generate the necessary plots.
+
+function evodriver2
+
+figure(1)
+
+evo(65,69,1.9,100)
+
+figure(2)
+
+evo(69,69,1.9,200)
+
+
+return
+
+
+%% evo.m 
+% evo delegates to three subfunctions
+% score(A,b) which calculates the score for each entry in A
+% advance(S,A) which uses the score to determine the next generation
+% evodisp(A,An) which compares the prev. generation to current to generate
+% representative colors for the state
+%
+function evo(M,N,b,gen)
+
+FC = zeros(1,gen);
+
+A = ones(M,N);	% M-by-N starting template
+A((M+1)/2,(N+1)/2) = 0;
+
+%A = round(rand(M,N)/1.8);
+
+for itc = 1:gen,	% play for gen generations
+
+    clf
+
+    S = score(A,b);    % living are red
+    
+    An = advance(S,A);
+
+    FC(itc) = sum(sum(A))/(M*N);
+    
+    if itc == gen
+        
+        
+        if M == 199
+            evodisp(A,An);
+    
+            title(['Generation ' num2str(itc)],'fontsize',16)
+            axis off
+        else
+            
+            plot(1:itc,FC)
+            
+            mstring = num2str(M);
+            nstring = num2str(N);
+            bstring = num2str(b);
+            tstring = ['M = ' mstring ', N = ' nstring ', b = ' bstring];
+            title(tstring,'fontsize',16)
+            xlabel('Generation','fontsize',16)
+            ylabel('Fraction of Cooperators','fontsize',16)
+            axis on
+            
+        end
+    
+    end
+    
+    A = An;
+    
+    
+
+end
+
+
+return
+
+%% score.m
+
+% calculates the score for each entry in A
+
+function S = score(A,b)
+
+S = A;
+
+M = size(A,1);
+N = size(A,2);
+
+for i=2:M-2,	% dead border
+for j=2:N-2,
+
+    nC = sum(sum(A(i-1:i+1,j-1:j+1)));   % # of C neighbors
+
+    % if C but 
+       if A(i,j) == 1,			% lonely or crowded die
+          S(i,j) = nC;
+       else
+           S(i,j) = nC*b;
+       end 
+
+end
+end
+
+
+
+return
+
+%% advance.m
+%
+%uses the score to determine the next generation
+%
+%step in time
+
+function An = advance(S,A)
+
+An = A;
+
+M = size(A,1);
+N = size(A,2);
+
+for i=2: M-2,	% dead border
+for j=2: N-2,
+
+    Amax = max(max(S(i-1:i+1,j-1:j+1))); % # of living neighbors
+    
+    [indx, indy] = find(S == Amax);
+    
+    if S(i,j) < Amax,				        % if alive but 
+       			% lonely or crowded die
+          An(i,j) = A(indx(1),indy(1));
+    end
+
+end
+end
+
+return
+
+%% evodisp.m
+% paints a square blue when C remains C
+% paints a square red when D remains D
+% paints a square yellow when C becomes D
+% paints a square green when D becomes C
+
+function evodisp(A,An)
+
+map = [0 0 1; 1 0 0; 1 1 0; 0 1 0];
+
+colormap(map)
+
+display = An;
+
+display(display == A & display ==1) = 1;
+
+display(display == A & display ==0) = 2;
+
+display(display ~= A & display ==0) = 3;
+
+display(display ~= A & display ==1) = 4;
+
+set(gcf,'doublebuffer','on');	% kill flicker
+
+axis off
+
+image(display)
+
+            
+return 
+##### SOURCE END #####
+-->
+   </body>
+</html>

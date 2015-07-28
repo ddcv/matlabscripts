@@ -1,0 +1,54 @@
+%
+% John Conway's game of life
+%
+% usage   jc(100)
+%
+function jc(M,N,gen)
+
+A = zeros(M,N);	% 99-by-99 starting template
+A((M+1)/2,(N+1)/2) = 1;
+%A = round(rand(M,N)/1.8);
+
+C = zeros(M,N,3);
+
+figure(1)
+set(gcf,'doublebuffer','on');	% kill flicker
+
+for itc = 1:gen,	% play for gen generations
+
+    C(:,:,1) = (A>0);    % living are red
+    image(C)             % built-in multi-patch
+
+    title(['Generation ' num2str(itc)],'fontsize',16)
+    axis off
+    pause(.5)
+
+    A = advance(A);
+
+end
+
+return
+
+% step in time
+
+function An = advance(A)
+
+An = A;
+
+for i=2:size(A,1)/2,	% dead border
+for j=2:size(A,2)/2,
+
+    nn = sum(sum(A(i-1:i+1,j-1:j+1)))-A(i,j);   % # of living neighbors
+
+    if A(i,j),				        % if alive but 
+       if (nn < 2 | nn > 3)			% lonely or crowded die
+          An(i,j) = 0;
+       end
+    else					% if dead and
+       if nn==3,				% threerounded arise
+          An(i,j) = 1;
+       end
+    end
+
+end
+end

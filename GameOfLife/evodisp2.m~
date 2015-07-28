@@ -1,0 +1,23 @@
+function evodisp2(A,An)
+
+map = [0 0 1; 1 0 0; 0 1 0; 1 1 0];
+
+colormap(map)
+
+display(:,:) = (An == A & An ==1);
+
+display(:,:) = (An == A & An ==0);
+
+display(:,:) = (An ~= A & An ==0);
+
+display(:,:) = (An ~= A & An ==1);
+
+figure(1)
+set(gcf,'doublebuffer','on');	% kill flicker
+
+image(display)
+
+colormap on
+
+            
+return 
